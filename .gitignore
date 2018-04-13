@@ -1,0 +1,6 @@
+_state*
+.idea*
+.DS_Store
+bin/*
+.idea/
+tmp/_output/*

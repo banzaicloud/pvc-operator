@@ -19,9 +19,7 @@ func printVersion() {
 
 func main() {
 	printVersion()
-	sdk.Watch("com.banzaicloud.pvc/v1alpha1","App","default", 5)
-	sdk.Watch("apps/v1", "Deployment", "default", 5)
-	sdk.Watch("v1", "PersistentVolumeClaim", "default", 5)
+	sdk.Watch("v1", "PersistentVolumeClaim", "default", 0)
 	sdk.Handle(stub.NewHandler())
 	sdk.Run(context.TODO())
 }

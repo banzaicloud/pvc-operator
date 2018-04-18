@@ -22,8 +22,6 @@ type App struct {
 }
 
 type AppSpec struct {
-	Size int32 `json:"size"`
 }
 type AppStatus struct {
-	Nodes []string `json:"nodes"`
 }

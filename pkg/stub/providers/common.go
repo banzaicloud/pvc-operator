@@ -7,27 +7,41 @@ import (
 	storagev1 "k8s.io/api/storage/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/coreos/operator-sdk/pkg/sdk/query"
+	"fmt"
 )
 
 type CommonProvider interface {
 	CreateStorageClass(*v1.PersistentVolumeClaim) error
 	GenerateMetadata() error
+	determineParameters(*v1.PersistentVolumeClaim) (map[string]string, error)
+	determineProvisioner(*v1.PersistentVolumeClaim) (string, error)
 }
 
 func DetermineProvider() (CommonProvider, error) {
-	req, err := http.NewRequest("GET", "http://169.254.169.254/metadata/instance?api-version=2017-12-01", nil)
-	if err != nil {
-		logrus.Errorf("Could not create a proper http request %s", err.Error())
-		return nil, err
+	var providers = map[string]string{
+		"azure": "http://169.254.169.254/metadata/instance?api-version=2017-12-01",
+		"aws": "http://169.254.169.254/latest/meta-data/",
 	}
-	req.Header.Set("Metadata", "true")
+	for key, value := range providers{
+		req, err := http.NewRequest("GET", value, nil)
+		if err != nil {
+			logrus.Errorf("Could not create a proper http request %s", err.Error())
+			return nil, err
+		}
+		req.Header.Set("Metadata", "true")
+		_, err = http.DefaultClient.Do(req)
+		if err != nil {
+			continue
+		}
+		switch key {
+		case "azure":
+			return &AzureProvider{}, nil
+		case "aws":
+			return &AwsProvider{}, nil
+		}
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
 	}
-	defer resp.Body.Close()
-	return &AzureProvider{}, nil
+	return nil, fmt.Errorf("could not determine cloud provider")
 }
 
 func CheckStorageClassExistence(name string) bool {

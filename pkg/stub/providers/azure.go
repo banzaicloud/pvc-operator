@@ -35,12 +35,12 @@ const (
 )
 func (az *AzureProvider) CreateStorageClass (pvc *v1.PersistentVolumeClaim) error {
 	logrus.Info("Creating new storage class")
-	provisioner, err := determineProvisioner(pvc)
+	provisioner, err := az.determineProvisioner(pvc)
 	if err != nil {
 		return nil
 	}
 	logrus.Info("Determining provisioner succeeded")
-	parameter, err :=  determineParameters(pvc, az)
+	parameter, err :=  az.determineParameters(pvc)
 	if err != nil {
 		return nil
 	}
@@ -151,7 +151,7 @@ func createStorageAccountClient(subscriptionID string) (storage.AccountsClient, 
 	return accountClient, nil
 }
 
-func determineParameters(pvc *v1.PersistentVolumeClaim, provider *AzureProvider) (map[string]string, error) {
+func (az *AzureProvider)determineParameters(pvc *v1.PersistentVolumeClaim) (map[string]string, error) {
 	var parameter = map[string]string{}
 	for _, mode := range pvc.Spec.AccessModes {
 		switch mode {
@@ -160,7 +160,7 @@ func determineParameters(pvc *v1.PersistentVolumeClaim, provider *AzureProvider)
 			parameter[kind] = "managed"
 			return parameter, nil
 		case "ReadWriteMany", "ReadOnlyMany":
-			loc := provider.metadata.location
+			loc := az.metadata.location
 			parameter[location] = loc
 			parameter[storageAccount] = "banzaicloudtest"
 			parameter[skuName] = "Standard_LRS"
@@ -170,7 +170,7 @@ func determineParameters(pvc *v1.PersistentVolumeClaim, provider *AzureProvider)
 	return nil, errors.New("could not determine parameters")
 }
 
-func determineProvisioner(pvc *v1.PersistentVolumeClaim) (string, error) {
+func (az *AzureProvider) determineProvisioner(pvc *v1.PersistentVolumeClaim) (string, error) {
 	for _, mode := range pvc.Spec.AccessModes {
 		switch mode {
 		case "ReadWriteOnce":
@@ -181,5 +181,5 @@ func determineProvisioner(pvc *v1.PersistentVolumeClaim) (string, error) {
 			return "kubernetes.io/azure-file", nil
 		}
 	}
-	return "", nil
+	return "", errors.New("AccessMode is missing from the PVC")
 }

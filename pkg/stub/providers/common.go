@@ -29,8 +29,11 @@ func DetermineProvider() (CommonProvider, error) {
 			return nil, err
 		}
 		req.Header.Set("Metadata", "true")
-		_, err = http.DefaultClient.Do(req)
+		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
+			return nil, fmt.Errorf("Something happened during the request %s", err.Error())
+		}
+		if resp.StatusCode == 404 {
 			continue
 		}
 		switch key {

@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
+	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/coreos/operator-sdk/pkg/sdk/query"
 )
 
 type CommonProvider interface {
@@ -25,4 +28,25 @@ func DetermineProvider() (CommonProvider, error) {
 	}
 	defer resp.Body.Close()
 	return &AzureProvider{}, nil
+}
+
+func CheckStorageClassExistence(name string) bool {
+	storageClassList := &storagev1.StorageClassList{
+		TypeMeta: v12.TypeMeta{
+			Kind:       "StorageClass",
+			APIVersion: "storage.k8s.io/v1",
+		},
+	}
+	if err := query.List("default", storageClassList); err != nil {
+		logrus.Infof("Error happened during listing storageclass %s", err.Error())
+		return false
+	}
+	for _, storageClass := range storageClassList.Items {
+		if storageClass.Name == name {
+			logrus.Info("Storageclass exist!")
+			return true
+		}
+	}
+	logrus.Info("Storageclass does not exist!")
+	return false
 }

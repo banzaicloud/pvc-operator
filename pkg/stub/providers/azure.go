@@ -92,11 +92,8 @@ func (az *AzureProvider) GenerateMetadata() error {
 		result[metadata] = string(readMetadata)
 	}
 	az.metadata.location = result["location"]
-	logrus.Info(result["location"])
 	az.metadata.subscriptionID = result["subscriptionId"]
-	logrus.Info(result["subscriptionId"])
 	az.metadata.resourceGroupName = result["resourceGroupName"]
-	logrus.Info(result["resourceGroupName"])
 
 	return nil
 }

@@ -8,40 +8,16 @@ rules:
   resources:
   - storageclasses
   verbs:
-  - list
-  - watch
-  - create
-  - update
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
   - get
-  - list
-  - patch
-  - update
-  - watch
+  - create
 - apiGroups:
   - ""
   resources:
-  - configmaps
-  - endpoints
   - persistentvolumeclaims
-  - replicationcontrollers
-  - replicationcontrollers/scale
-  - secrets
-  - serviceaccounts
-  - services
-  - services/proxy
   verbs:
   - create
-  - delete
-  - deletecollection
   - get
   - list
-  - patch
   - update
   - watch
 

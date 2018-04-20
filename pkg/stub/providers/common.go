@@ -21,6 +21,7 @@ func DetermineProvider() (CommonProvider, error) {
 	var providers = map[string]string{
 		"azure": "http://169.254.169.254/metadata/instance?api-version=2017-12-01",
 		"aws":   "http://169.254.169.254/latest/meta-data/",
+		"google": "http://169.254.169.254/0.1/meta-data/",
 	}
 	for key, value := range providers {
 		req, err := http.NewRequest("GET", value, nil)
@@ -33,7 +34,7 @@ func DetermineProvider() (CommonProvider, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Something happened during the request %s", err.Error())
 		}
-		if resp.StatusCode == 404 {
+		if resp.StatusCode == 404 || resp.StatusCode == 405 {
 			continue
 		}
 		switch key {
@@ -41,6 +42,8 @@ func DetermineProvider() (CommonProvider, error) {
 			return &AzureProvider{}, nil
 		case "aws":
 			return &AwsProvider{}, nil
+		case "google":
+			return &GoogleProvider{}, nil
 		}
 
 	}

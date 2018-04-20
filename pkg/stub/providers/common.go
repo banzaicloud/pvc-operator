@@ -20,9 +20,9 @@ type CommonProvider interface {
 func DetermineProvider() (CommonProvider, error) {
 	var providers = map[string]string{
 		"azure": "http://169.254.169.254/metadata/instance?api-version=2017-12-01",
-		"aws": "http://169.254.169.254/latest/meta-data/",
+		"aws":   "http://169.254.169.254/latest/meta-data/",
 	}
-	for key, value := range providers{
+	for key, value := range providers {
 		req, err := http.NewRequest("GET", value, nil)
 		if err != nil {
 			logrus.Errorf("Could not create a proper http request %s", err.Error())
@@ -48,22 +48,19 @@ func DetermineProvider() (CommonProvider, error) {
 }
 
 func CheckStorageClassExistence(name string) bool {
-	storageClassList := &storagev1.StorageClassList{
+	storageClass := &storagev1.StorageClass{
 		TypeMeta: v12.TypeMeta{
 			Kind:       "StorageClass",
 			APIVersion: "storage.k8s.io/v1",
 		},
+		ObjectMeta: v12.ObjectMeta{
+			Name: name,
+		},
 	}
-	if err := query.List("default", storageClassList); err != nil {
-		logrus.Infof("Error happened during listing storageclass %s", err.Error())
+	if err := query.Get(storageClass); err != nil {
+		logrus.Infof("Storageclass does not exist %s", err.Error())
 		return false
 	}
-	for _, storageClass := range storageClassList.Items {
-		if storageClass.Name == name {
-			logrus.Info("Storageclass exist!")
-			return true
-		}
-	}
-	logrus.Info("Storageclass does not exist!")
-	return false
+	logrus.Infof("Storageclass %s exists!", name)
+	return true
 }

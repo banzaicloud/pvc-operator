@@ -16,12 +16,12 @@ func (aws *AwsProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) error 
 	logrus.Info("Creating new storage class")
 	provisioner, err := aws.determineProvisioner(pvc)
 	if err != nil {
-		return nil
+		return err
 	}
 	logrus.Info("Determining provisioner succeeded")
 	parameter, err :=  aws.determineParameters(pvc)
 	if err != nil {
-		return nil
+		return err
 	}
 	logrus.Info("Determining parameter succeeded")
 	return action.Create(&storagev1.StorageClass{

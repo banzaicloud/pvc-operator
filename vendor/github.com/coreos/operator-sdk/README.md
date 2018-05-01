@@ -1,4 +1,4 @@
-# Operator SDK
+<img src="doc/images/operator_logo_sdk_color.svg" height="125px"></img>
 
 ### Project Status: pre-alpha
 
@@ -8,12 +8,14 @@ See the [design docs][design_docs] for planned work on upcoming milestones.
 
 ## Overview
 
+This project is a component of the [Operator Framework][of-home], an open source toolkit to manage Kubernetes native applications, called Operators, in an effective, automated, and scalable way. Read more in the [introduction blog post][of-blog].
+
 [Operators][operator_link] make it easy to manage complex stateful applications on top of Kubernetes. However writing an operator today can be difficult because of challenges such as using low level APIs, writing boilerplate, and a lack of modularity which leads to duplication.
 
 The Operator SDK is a framework designed to make writing operators easier by providing:
 - High level APIs and abstractions to write the operational logic more intuitively
 - Tools for scaffolding and code generation to bootstrap a new project fast
-- Modular functionality to improve reusability
+- Extensions to cover common operator use cases
 
 ## Workflow
 
@@ -31,10 +33,10 @@ At a high level an operator using the SDK processes events for watched resources
 First, checkout and install the operator-sdk CLI:
 
 ```sh
-$ cd $GOPATH/src/github.com/coreos/operator-sdk
-$ git checkout tags/v0.0.4
+$ cd $GOPATH/src/github.com/operator-framework/operator-sdk
+$ git checkout tags/v0.0.5
 $ dep ensure
-$ go install github.com/coreos/operator-sdk/commands/operator-sdk
+$ go install github.com/operator-framework/operator-sdk/commands/operator-sdk
 ```
 
 Create and deploy an app-operator using the SDK CLI:
@@ -69,7 +71,28 @@ $ kubectl delete -f deploy/rbac.yaml
 
 To learn more about the operator-sdk, see the [user guide][guide].
 
+## Samples
+
+To explore any operator samples built using the operator-sdk, see the [operator-sdk-samples][samples].
+
+## Contributing
+
+See [CONTRIBUTING][contrib] for details on submitting patches and the contribution workflow.
+
+## Reporting bugs
+
+See [reporting bugs][bug_guide] for details about reporting any issues.
+
+## License
+
+Operator SDK is under Apache 2.0 license. See the [LICENSE][license_file] file for details.
 
 [operator_link]: https://coreos.com/operators/
 [design_docs]: ./doc/design
 [guide]: ./doc/user-guide.md
+[samples]: https://github.com/operator-framework/operator-sdk-samples
+[of-home]: https://github.com/operator-framework
+[of-blog]: https://coreos.com/blog/introducing-operator-framework
+[contrib]: ./CONTRIBUTING.MD
+[bug_guide]:./doc/dev/reporting_bugs.md
+[license_file]:./LICENSE

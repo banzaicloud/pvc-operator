@@ -162,8 +162,8 @@ const gopkgTomlTmpl = `[[override]]
   version = "kubernetes-1.9.3"
 
 [[constraint]]
-  name = "github.com/coreos/operator-sdk"
+  name = "github.com/operator-framework/operator-sdk"
   # The version rule is used for a specific release and the master branch for in between releases.
   branch = "master"
-  # version = "=v0.0.4"
+  # version = "=v0.0.5"
 `

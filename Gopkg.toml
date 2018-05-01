@@ -12,10 +12,7 @@
 
 [[constraint]]
   name = "github.com/coreos/operator-sdk"
-  # The version rule is used for a specific release and the master branch for in between releases.
   branch = "master"
-  source = "github.com/banzaicloud/operator-sdk"
-  # version = "=v0.0.4"
 
 [[constraint]]
   name = "github.com/Azure/azure-sdk-for-go"

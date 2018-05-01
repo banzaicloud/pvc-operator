@@ -1,8 +1,8 @@
 package stub
 
 import (
-	"github.com/coreos/operator-sdk/pkg/sdk/handler"
-	"github.com/coreos/operator-sdk/pkg/sdk/types"
+	"github.com/operator-framework/operator-sdk/pkg/sdk/handler"
+	"github.com/operator-framework/operator-sdk/pkg/sdk/types"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/api/core/v1"
 	"fmt"

@@ -5,7 +5,7 @@ import (
 	"runtime"
 
 	stub "github.com/banzaicloud/pvc-handler/pkg/stub"
-	sdk "github.com/coreos/operator-sdk/pkg/sdk"
+	sdk "github.com/operator-framework/operator-sdk/pkg/sdk"
 	sdkVersion "github.com/coreos/operator-sdk/version"
 
 	"github.com/sirupsen/logrus"

@@ -12,7 +12,7 @@ spec:
   scope: Namespaced
   version: v1alpha1
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pvc-handler

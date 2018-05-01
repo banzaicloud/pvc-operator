@@ -4,7 +4,7 @@ import (
 	"k8s.io/api/core/v1"
 	"errors"
 	"github.com/sirupsen/logrus"
-	"github.com/coreos/operator-sdk/pkg/sdk/action"
+	"github.com/operator-framework/operator-sdk/pkg/sdk/action"
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

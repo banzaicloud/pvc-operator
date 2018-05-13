@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/banzaicloud/pvc-handler/pkg/stub/providers"
+	"strings"
 )
 
 func NewHandler() handler.Handler {
@@ -25,6 +26,12 @@ func (h *Handler) Handle(ctx types.Context, event types.Event) error {
 			if o.Status.Phase == v1.ClaimPending {
 				logrus.Info("PersistenVolumeClaim event received!")
 				logrus.Info("Check if the storageclass already exist!")
+				if strings.Contains(*o.Spec.StorageClassName, "nfs") {
+					logrus.Info("Check if the deployment for Nfs exists!")
+					if !providers.CheckNfsServerExistence(*o.Spec.StorageClassName) {
+
+					}
+				}
 				if !providers.CheckStorageClassExistence(*o.Spec.StorageClassName) {
 					commonProvider, err := providers.DetermineProvider()
 					if err != nil {

@@ -29,8 +29,13 @@ func (h *Handler) Handle(ctx types.Context, event types.Event) error {
 				if strings.Contains(*o.Spec.StorageClassName, "nfs") {
 					logrus.Info("Check if the deployment for Nfs exists!")
 					if !providers.CheckNfsServerExistence(*o.Spec.StorageClassName) {
-
+						err := providers.SetUpNfsProvisioner(o)
+						if err != nil {
+							logrus.Errorf("Cloud not create the NFS deployment %s", err.Error())
+							return err
+						}
 					}
+					return nil
 				}
 				if !providers.CheckStorageClassExistence(*o.Spec.StorageClassName) {
 					commonProvider, err := providers.DetermineProvider()

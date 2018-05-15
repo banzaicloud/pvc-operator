@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"k8s.io/api/apps/v1beta1"
 	"github.com/coreos/operator-sdk/pkg/sdk/action"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 type CommonProvider interface {
@@ -53,7 +54,7 @@ func DetermineProvider() (CommonProvider, error) {
 }
 
 func CheckNfsServerExistence(name string) bool {
-	if !CheckPersistentVolumeClaimExistence("nfs") {
+	if !CheckPersistentVolumeClaimExistence(fmt.Sprintf("%s-data", name)) {
 		logrus.Info("PersistentVolume claim for Nfs does not exists!")
 		return false
 	}
@@ -77,10 +78,11 @@ func CheckPersistentVolumeClaimExistence(name string) bool {
 		},
 		ObjectMeta: v12.ObjectMeta{
 			Name: name,
+			Namespace: "default",
 		},
 	}
 	if err := query.Get(persistentVolumeClaim); err != nil {
-		logrus.Info("PersistentVolumeClaim does not exists %s", err.Error())
+		logrus.Infof("PersistentVolumeClaim does not exists %s", err.Error())
 		return false
 	}
 	logrus.Infof("PersistentVolumeClaim %s exist!", name)
@@ -91,10 +93,11 @@ func checkNfsProviderDeployment() bool {
 	deployment := &v1beta1.Deployment{
 		TypeMeta: v12.TypeMeta{
 			Kind:       "Deployment",
-			APIVersion: "v1beta1",
+			APIVersion: "extensions/v1beta1",
 		},
 		ObjectMeta: v12.ObjectMeta{
-			Name:            "nfs-provisioner",
+			Name:      "nfs-provisioner",
+			Namespace: "default",
 		},
 		Spec: v1beta1.DeploymentSpec{
 			Template: v1.PodTemplateSpec{
@@ -116,7 +119,8 @@ func checkNfsProviderDeployment() bool {
 			APIVersion: "v1",
 		},
 		ObjectMeta: v12.ObjectMeta{
-			Name:            "nfs-provisioner",
+			Name:      "nfs-provisioner",
+			Namespace: "default",
 		},
 		Spec: v1.ServiceSpec{
 			Selector:                 map[string]string{"app": "nfs-provisioner"},
@@ -136,13 +140,19 @@ func checkNfsProviderDeployment() bool {
 
 func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 	logrus.Info("Creating new PersistentVolumeClaim for Nfs provisioner..")
+
+	plusStorage, _ := resource.ParseQuantity("2Gi")
+	parsedStorageSize := pv.Spec.Resources.Requests["storage"]
+	parsedStorageSize.Add(plusStorage)
+
 	err := action.Create(&v1.PersistentVolumeClaim{
 		TypeMeta: v12.TypeMeta{
 			Kind:       "PersistentVolumeClaim",
 			APIVersion: "v1",
 		},
 		ObjectMeta: v12.ObjectMeta{
-			Name:            "nfs-data",
+			Name:      fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
+			Namespace: "default",
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
@@ -150,7 +160,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 			},
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
-					"storage": *pv.Spec.Resources.Requests.StorageEphemeral(),
+					"storage": parsedStorageSize,
 				},
 			},
 		},
@@ -170,6 +180,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 			Labels:                     map[string]string{
 				"app": "nfs-provisioner",
 			},
+			Namespace: "default",
 		},
 		Spec: v1.ServiceSpec{
 			Ports:                    []v1.ServicePort{
@@ -192,10 +203,11 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 	action.Create(&v1beta1.Deployment{
 		TypeMeta: v12.TypeMeta{
 			Kind:       "Deployment",
-			APIVersion: "v1beta1",
+			APIVersion: "extensions/v1beta1",
 		},
 		ObjectMeta: v12.ObjectMeta{
-			Name:            "nfs-provisioner",
+			Name:      "nfs-provisioner",
+			Namespace: "default",
 		},
 		Spec: v1beta1.DeploymentSpec{
 			Replicas: &replicas,
@@ -209,12 +221,40 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 					Volumes:                       []v1.Volume{
 						{Name: "nfs-prov-volume", VolumeSource: v1.VolumeSource{
 							PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-								ClaimName: "nfs-data",
+								ClaimName: fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
 							},
 						},},
 					},
 					Containers:                    []v1.Container{
-						{},
+						{
+							Name: "nfs-provisioner",
+							Image: "quay.io/kubernetes_incubator/nfs-provisioner:v1.0.8",
+							Ports: []v1.ContainerPort{
+								{Name: "nfs", ContainerPort: 2049},
+								{Name: "mountd", ContainerPort: 20048},
+								{Name: "rpcbind", ContainerPort: 111},
+								{Name: "rpcbind-udp", ContainerPort: 111, Protocol: "UDP"},
+							},
+							SecurityContext: &v1.SecurityContext{
+								Capabilities: &v1.Capabilities{
+								Add: []v1.Capability{
+									"DAC_READ_SEARCH",
+									"SYS_RESOURCE",
+								},
+								},
+							},
+							Args: []string{
+								"-provisioner=banzaicloud.com/nfs",
+							},
+							Env: []v1.EnvVar{
+								{Name: "POD_IP", ValueFrom: &v1.EnvVarSource{ FieldRef: &v1.ObjectFieldSelector{FieldPath: "status.podIP"}}},
+								{Name: "SERVICE_NAME", Value: "nfs-provisioner"},
+								{Name: "POD_NAMESPACE", ValueFrom: &v1.EnvVarSource{ FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
+							},
+							VolumeMounts: []v1.VolumeMount{
+								{Name:"nfs-prov-volume", MountPath: "/export"},
+							},
+						},
 					},
 				},
 			},
@@ -224,6 +264,25 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 			},
 		},
 	})
+	if err != nil {
+		logrus.Errorf("Error happened during creating the Deployment for Nfs %s", err.Error())
+		return err
+	}
+	logrus.Info("Creating new StorageClass for Nfs provisioner..")
+	action.Create(&storagev1.StorageClass{
+		TypeMeta: v12.TypeMeta{
+			Kind:       "StorageClass",
+			APIVersion: "storage.k8s.io/v1",
+		},
+		ObjectMeta: v12.ObjectMeta{
+			Name:            *pv.Spec.StorageClassName,
+		},
+		Provisioner:          "banzaicloud.com/nfs",
+	})
+	if err != nil {
+		logrus.Errorf("Error happened during creating the StorageClass for Nfs %s", err.Error())
+		return err
+	}
 	return nil
 }
 func CheckStorageClassExistence(name string) bool {

@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: pvc-handler
-          image: banzaicloud/pvc-handler:v0.0.1
+          image: banzaicloud/pvc-handler:v0.0.2
           command:
           - pvc-handler
           imagePullPolicy: Always

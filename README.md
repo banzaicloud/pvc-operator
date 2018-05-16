@@ -1,4 +1,6 @@
-# pvc-operator
+## PVC Operator
+
+This operator builds upon the new [Kubernetes operators SDK](https://banzaicloud.com/blog/operator-sdk/) and used on different cloud providers.
 
 ### Introduction
 

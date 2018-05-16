@@ -111,7 +111,7 @@ func getOwner() *v1beta1.Deployment {
 			APIVersion: "extensions/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "pvc-handler",
+			Name:      "pvc-operator",
 			Namespace: "default",
 		},
 	}

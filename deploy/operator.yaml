@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pvc-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: pvc-operator
+  template:
+    metadata:
+      labels:
+        name: pvc-operator
+    spec:
+      containers:
+        - name: pvc-operator
+          image: banzaicloud/pvc-operator:v0.0.3
+          command:
+          - pvc-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace

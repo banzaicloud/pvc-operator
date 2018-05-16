@@ -50,8 +50,8 @@ The given chart should include a `Persistent Volume Claim` which includes a [Sto
 
 #### 1. How does this project uses Kubernetes Namespaces?
 
-Right now every instance created by this `Operator` is in `default` namespace, but we are working to add support
-to different namespaces.
+From [PR 6](https://github.com/banzaicloud/pvc-operator/pull/6) this operator fully supports Kubernetes Namespaces.
+In case of NFS the Deployment will still be created in the `default` namespace. 
 
 #### 2. How is the cloud provider determined?
 

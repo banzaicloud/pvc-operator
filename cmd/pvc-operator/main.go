@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"github.com/banzaicloud/pvc-operator/pkg/stub"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 
@@ -19,13 +20,9 @@ func printVersion() {
 
 func main() {
 	printVersion()
-	//namespace, err := k8sutil.GetWatchNamespace()
-	//if err != nil {
-	//	logrus.Fatalf("Failed to get watch namespace: %v", err)
-	//}
 	resyncPeriod := 0
-	sdk.Watch("banzaicloud.com/v1alpha1", "ObjectStore", "default", resyncPeriod)
-	sdk.Watch("v1", "PersistentVolumeClaim", "default", resyncPeriod)
+	sdk.Watch("banzaicloud.com/v1alpha1", "ObjectStore", metav1.NamespaceAll, resyncPeriod)
+	sdk.Watch("v1", "PersistentVolumeClaim", metav1.NamespaceAll, resyncPeriod)
 	sdk.Handle(stub.NewHandler())
 	sdk.Run(context.TODO())
 }

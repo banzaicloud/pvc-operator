@@ -4,7 +4,7 @@
 
 This operator makes using [Kubernetes Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) easier on cloud providers, by dynamically creating the required accounts, classes and more. It allows to use exactly the same [Helm](https://helm.sh) chart on all the supported providers, there is no need to create cloud specific Helm charts.
 
-The Currently supported list od Providers/StorageClasses are:
+The Currently supported list of Providers/StorageClasses are:
 
 - Azure(AKS)
     - AzureFile

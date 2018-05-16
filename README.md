@@ -23,10 +23,15 @@ The Currently supported list of Providers/StorageClasses are:
     
 ### Installation
 
-The user should use the [operator.yaml](https://github.com/banzaicloud/pvc-operator/blob/master/deploy/operator.yaml)
-to deploy the operator to a Kubernetes cluster. If the cluster uses [RBAC](https://kubernetes.io/docs/admin/authorization/rbac/) deploy the [rbac.yaml](https://github.com/banzaicloud/pvc-operator/blob/master/deploy/rbac.yaml) first and add the following line after the specs in the `operator.yaml`.
+- Branch `0.0.2` contains an earlier version of this operator if you want to use this please follow this guide:
+The user should use the [operator.yaml](https://github.com/banzaicloud/pvc-operator/blob/0.0.2/deploy/operator.yaml)
+to deploy the operator to a Kubernetes cluster. If the cluster uses [RBAC](https://kubernetes.io/docs/admin/authorization/rbac/) deploy the [rbac.yaml](https://github.com/banzaicloud/pvc-operator/blob/0.0.2/deploy/rbac.yaml) first and add the following line after the specs in the `operator.yaml`.
 
 ```serviceAccountName: pvc-operator```
+
+- In case of `master` branch, please use the [crd.yaml](https://github.com/banzaicloud/pvc-operator/blob/master/deploy/crd.yaml) first then
+deploy the operator itself by using the [operator.yaml](https://github.com/banzaicloud/pvc-operator/blob/master/deploy/operator.yaml).
+If the cluster uses [RBAC](https://kubernetes.io/docs/admin/authorization/rbac/) deploy the [rbac.yaml](https://github.com/banzaicloud/pvc-operator/blob/master/deploy/rbac.yaml).
 
 ### Cloud Specific Requirements
 

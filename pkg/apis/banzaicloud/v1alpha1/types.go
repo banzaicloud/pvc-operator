@@ -22,7 +22,7 @@ type ObjectStore struct {
 }
 
 type ObjectStoreSpec struct {
-	// Fill me
+	Name string
 }
 type ObjectStoreStatus struct {
 	// Fill me

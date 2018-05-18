@@ -104,12 +104,13 @@ func (gke *GoogleProvider) CreateObjectStoreBucket(app *v1alpha1.ObjectStore) er
 	}
 	logrus.Info("Storage client created successfully")
 
-	bucket := client.Bucket("almafa")
+	bucket := client.Bucket(app.Spec.Name)
 	gke.determineProjectId()
 	if err := bucket.Create(ctx, gke.projectId, nil); err != nil {
 		logrus.Fatalf("Failed to create bucket: %v", err)
 		return err
 	}
+	logrus.Infof("%s bucket created", app.Spec.Name)
 	return nil
 }
 

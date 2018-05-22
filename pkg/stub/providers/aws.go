@@ -1,13 +1,13 @@
 package providers
 
 import (
-	"k8s.io/api/core/v1"
-	"github.com/sirupsen/logrus"
 	"errors"
+	"github.com/banzaicloud/pvc-operator/pkg/apis/banzaicloud/v1alpha1"
+	"github.com/operator-framework/operator-sdk/pkg/sdk"
+	"github.com/sirupsen/logrus"
+	"k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"github.com/operator-framework/operator-sdk/pkg/sdk"
-	"github.com/banzaicloud/pvc-operator/pkg/apis/banzaicloud/v1alpha1"
 )
 
 type AwsProvider struct {
@@ -20,7 +20,7 @@ func (aws *AwsProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) error 
 		return err
 	}
 	logrus.Info("Determining provisioner succeeded")
-	parameter, err :=  aws.determineParameters(pvc)
+	parameter, err := aws.determineParameters(pvc)
 	if err != nil {
 		return err
 	}
@@ -32,12 +32,12 @@ func (aws *AwsProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) error 
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            *pvc.Spec.StorageClassName,
-			Annotations:                nil,
-			OwnerReferences:            nil,
+			Annotations:     nil,
+			OwnerReferences: nil,
 		},
-		Provisioner:          provisioner,
-		MountOptions:         nil,
-		Parameters:           parameter,
+		Provisioner:  provisioner,
+		MountOptions: nil,
+		Parameters:   parameter,
 	})
 }
 
@@ -56,7 +56,7 @@ func (aws *AwsProvider) determineParameters(pvc *v1.PersistentVolumeClaim) (map[
 	return nil, errors.New("could not determine parameters")
 }
 
-func (aws *AwsProvider) determineProvisioner (pvc *v1.PersistentVolumeClaim) (string, error) {
+func (aws *AwsProvider) determineProvisioner(pvc *v1.PersistentVolumeClaim) (string, error) {
 	for _, mode := range pvc.Spec.AccessModes {
 		switch mode {
 		case "ReadWriteOnce":
@@ -70,7 +70,7 @@ func (aws *AwsProvider) determineProvisioner (pvc *v1.PersistentVolumeClaim) (st
 	return "", errors.New("AccessMode is missing from the PVC")
 }
 
-func (aws *AwsProvider) CheckBucketExistence(store *v1alpha1.ObjectStore) (bool, error){
+func (aws *AwsProvider) CheckBucketExistence(store *v1alpha1.ObjectStore) (bool, error) {
 	return false, nil
 }
 

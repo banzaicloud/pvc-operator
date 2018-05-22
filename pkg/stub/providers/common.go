@@ -1,15 +1,15 @@
 package providers
 
 import (
-	"k8s.io/api/core/v1"
-	"net/http"
-	"github.com/sirupsen/logrus"
-	"k8s.io/api/extensions/v1beta1"
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	storagev1 "k8s.io/api/storage/v1"
-	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/banzaicloud/pvc-operator/pkg/apis/banzaicloud/v1alpha1"
+	"github.com/operator-framework/operator-sdk/pkg/sdk"
+	"github.com/sirupsen/logrus"
+	"k8s.io/api/core/v1"
+	"k8s.io/api/extensions/v1beta1"
+	storagev1 "k8s.io/api/storage/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"net/http"
 )
 
 type CommonProvider interface {
@@ -23,8 +23,8 @@ type CommonProvider interface {
 
 func DetermineProvider() (CommonProvider, error) {
 	var providers = map[string]string{
-		"azure": "http://169.254.169.254/metadata/instance?api-version=2017-12-01",
-		"aws":   "http://169.254.169.254/latest/meta-data/",
+		"azure":  "http://169.254.169.254/metadata/instance?api-version=2017-12-01",
+		"aws":    "http://169.254.169.254/latest/meta-data/",
 		"google": "http://169.254.169.254/0.1/meta-data/",
 	}
 	for key, value := range providers {
@@ -61,7 +61,7 @@ func CheckPersistentVolumeClaimExistence(name string) bool {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:      name,
 			Namespace: "default",
 		},
 	}

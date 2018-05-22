@@ -1,14 +1,14 @@
 package stub
 
 import (
-	"github.com/operator-framework/operator-sdk/pkg/sdk"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/api/core/v1"
-	"github.com/sirupsen/logrus"
-	"strings"
 	"fmt"
 	"github.com/banzaicloud/pvc-operator/pkg/apis/banzaicloud/v1alpha1"
 	"github.com/banzaicloud/pvc-operator/pkg/stub/providers"
+	"github.com/operator-framework/operator-sdk/pkg/sdk"
+	"github.com/sirupsen/logrus"
+	"k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"strings"
 )
 
 func NewHandler() sdk.Handler {

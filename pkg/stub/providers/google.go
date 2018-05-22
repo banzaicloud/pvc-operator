@@ -1,17 +1,17 @@
 package providers
 
 import (
-	"k8s.io/api/core/v1"
-	"github.com/sirupsen/logrus"
-	"net/http"
-	"io/ioutil"
 	"cloud.google.com/go/storage"
-	"github.com/operator-framework/operator-sdk/pkg/sdk"
-	storagev1 "k8s.io/api/storage/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"context"
 	"errors"
 	"github.com/banzaicloud/pvc-operator/pkg/apis/banzaicloud/v1alpha1"
-	"context"
+	"github.com/operator-framework/operator-sdk/pkg/sdk"
+	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"net/http"
 )
 
 type GoogleProvider struct {
@@ -25,7 +25,7 @@ func (gke *GoogleProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) err
 		return err
 	}
 	logrus.Info("Determining provisioner succeeded")
-	parameter, err :=  gke.determineParameters(pvc)
+	parameter, err := gke.determineParameters(pvc)
 	if err != nil {
 		return err
 	}
@@ -37,12 +37,12 @@ func (gke *GoogleProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) err
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            *pvc.Spec.StorageClassName,
-			Annotations:                nil,
-			OwnerReferences:            nil,
+			Annotations:     nil,
+			OwnerReferences: nil,
 		},
-		Provisioner:          provisioner,
-		MountOptions:         nil,
-		Parameters:           parameter,
+		Provisioner:  provisioner,
+		MountOptions: nil,
+		Parameters:   parameter,
 	})
 }
 
@@ -61,7 +61,7 @@ func (gke *GoogleProvider) determineParameters(pvc *v1.PersistentVolumeClaim) (m
 	return nil, errors.New("could not determine parameters")
 }
 
-func (gke *GoogleProvider) determineProvisioner (pvc *v1.PersistentVolumeClaim) (string, error) {
+func (gke *GoogleProvider) determineProvisioner(pvc *v1.PersistentVolumeClaim) (string, error) {
 	for _, mode := range pvc.Spec.AccessModes {
 		switch mode {
 		case "ReadWriteOnce", "ReadOnlyMany":
@@ -85,7 +85,7 @@ func (gke *GoogleProvider) determineProjectId() error {
 		logrus.Errorf("Error during getting project-id, %s", err.Error())
 		return err
 	}
-	readProjectId, err :=ioutil.ReadAll(resp.Body)
+	readProjectId, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		logrus.Errorf("Error during reading response %s", err.Error())
 		return err

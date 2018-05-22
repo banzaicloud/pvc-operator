@@ -1,25 +1,25 @@
 package providers
 
 import (
-	"k8s.io/api/core/v1"
-	"github.com/sirupsen/logrus"
-	"net/http"
+	"context"
+	"errors"
 	"fmt"
-	"io/ioutil"
-	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
+	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/banzaicloud/pvc-operator/pkg/apis/banzaicloud/v1alpha1"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
+	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"context"
-	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage"
-	"github.com/banzaicloud/pvc-operator/pkg/apis/banzaicloud/v1alpha1"
-	"errors"
+	"net/http"
 )
 
 type Metadata struct {
-	location string
-	subscriptionID string
+	location          string
+	subscriptionID    string
 	resourceGroupName string
 }
 
@@ -29,19 +29,19 @@ type AzureProvider struct {
 
 const (
 	storageAccount = "storageAccount"
-	location = "location"
-	skuName = "skuName"
-	kind = "kind"
-
+	location       = "location"
+	skuName        = "skuName"
+	kind           = "kind"
 )
-func (az *AzureProvider) CreateStorageClass (pvc *v1.PersistentVolumeClaim) error {
+
+func (az *AzureProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) error {
 	logrus.Info("Creating new storage class")
 	provisioner, err := az.determineProvisioner(pvc)
 	if err != nil {
 		return nil
 	}
 	logrus.Info("Determining provisioner succeeded")
-	parameter, err :=  az.determineParameters(pvc)
+	parameter, err := az.determineParameters(pvc)
 	if err != nil {
 		return nil
 	}
@@ -56,12 +56,12 @@ func (az *AzureProvider) CreateStorageClass (pvc *v1.PersistentVolumeClaim) erro
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            *pvc.Spec.StorageClassName,
-			Annotations:                nil,
-			OwnerReferences:            nil,
+			Annotations:     nil,
+			OwnerReferences: nil,
 		},
-		Provisioner:          provisioner,
-		MountOptions:         nil,
-		Parameters:           parameter,
+		Provisioner:  provisioner,
+		MountOptions: nil,
+		Parameters:   parameter,
 	})
 }
 
@@ -73,7 +73,7 @@ func (az *AzureProvider) GenerateMetadata() error {
 		"resourceGroupName",
 	}
 	var result = map[string]string{}
-	for _, metadata := range metadatas{
+	for _, metadata := range metadatas {
 		req, err := http.NewRequest("GET", fmt.Sprintf("http://169.254.169.254/metadata/instance/compute/%s?api-version=2017-12-01&format=text", metadata), nil)
 		if err != nil {
 			logrus.Errorf("Error during getting %s, %s", metadata, err.Error())
@@ -85,7 +85,7 @@ func (az *AzureProvider) GenerateMetadata() error {
 			logrus.Errorf("Error during getting %s, %s", metadata, err.Error())
 			return err
 		}
-		readMetadata, err :=ioutil.ReadAll(resp.Body)
+		readMetadata, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			logrus.Errorf("Error during reading response %s", err.Error())
 			return err
@@ -152,7 +152,7 @@ func createStorageAccountClient(subscriptionID string) (storage.AccountsClient, 
 	return accountClient, nil
 }
 
-func (az *AzureProvider)determineParameters(pvc *v1.PersistentVolumeClaim) (map[string]string, error) {
+func (az *AzureProvider) determineParameters(pvc *v1.PersistentVolumeClaim) (map[string]string, error) {
 	var parameter = map[string]string{}
 	for _, mode := range pvc.Spec.AccessModes {
 		switch mode {

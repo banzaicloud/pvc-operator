@@ -1,3 +1,6 @@
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Go Report Card](https://goreportcard.com/badge/github.com/banzaicloud/pvc-operator)](https://goreportcard.com/report/github.com/banzaicloud/pvc-operator)
+
 ## PVC Operator
 
 This operator builds upon the new [Kubernetes operators SDK](https://banzaicloud.com/blog/operator-sdk/) and used on different cloud providers.

@@ -114,7 +114,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 					Containers: []v1.Container{
 						{
 							Name:  "nfs-provisioner",
-							Image: "quay.io/kubernetes_incubator/nfs-provisioner:v1.0.8",
+							Image: "quay.io/kubernetes_incubator/nfs-provisioner:v1.0.9",
 							Ports: []v1.ContainerPort{
 								{Name: "nfs", ContainerPort: 2049},
 								{Name: "mountd", ContainerPort: 20048},

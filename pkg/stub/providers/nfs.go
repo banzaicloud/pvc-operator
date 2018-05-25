@@ -5,6 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
@@ -44,7 +45,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 			},
 		},
 	})
-	if err != nil {
+	if err != nil && !errors.IsAlreadyExists(err) {
 		logrus.Errorf("Error happened during creating a PersistentVolumeClaim for Nfs %s", err.Error())
 		return err
 	}
@@ -76,13 +77,13 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 			},
 		},
 	})
-	if err != nil {
+	if err != nil && !errors.IsAlreadyExists(err) {
 		logrus.Errorf("Error happened during creating the Service for Nfs %s", err.Error())
 		return err
 	}
 	logrus.Info("Creating new Deployment for Nfs provisioner..")
 	replicas := int32(1)
-	sdk.Create(&v1beta1.Deployment{
+	err = sdk.Create(&v1beta1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
 			APIVersion: "extensions/v1beta1",
@@ -148,13 +149,13 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 			},
 		},
 	})
-	if err != nil {
+	if err != nil && !errors.IsAlreadyExists(err) {
 		logrus.Errorf("Error happened during creating the Deployment for Nfs %s", err.Error())
 		return err
 	}
 	logrus.Info("Creating new StorageClass for Nfs provisioner..")
 	reclaimPolicy := v1.PersistentVolumeReclaimRetain
-	sdk.Create(&storagev1.StorageClass{
+	err = sdk.Create(&storagev1.StorageClass{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StorageClass",
 			APIVersion: "storage.k8s.io/v1",
@@ -168,7 +169,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 		ReclaimPolicy: &reclaimPolicy,
 		Provisioner:   "banzaicloud.com/nfs",
 	})
-	if err != nil {
+	if err != nil && !errors.IsAlreadyExists(err) {
 		logrus.Errorf("Error happened during creating the StorageClass for Nfs %s", err.Error())
 		return err
 	}

@@ -2,6 +2,7 @@ package providers
 
 import (
 	"fmt"
+
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -34,7 +35,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
-				"ReadWriteOnce",
+				v1.ReadWriteOnce,
 			},
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
@@ -143,7 +144,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 				},
 			},
 			Strategy: v1beta1.DeploymentStrategy{
-				Type: "Recreate",
+				Type: v1beta1.RecreateDeploymentStrategyType,
 			},
 		},
 	})
@@ -152,6 +153,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 		return err
 	}
 	logrus.Info("Creating new StorageClass for Nfs provisioner..")
+	reclaimPolicy := v1.PersistentVolumeReclaimRetain
 	sdk.Create(&storagev1.StorageClass{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StorageClass",
@@ -163,7 +165,8 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 				ownerRef,
 			},
 		},
-		Provisioner: "banzaicloud.com/nfs",
+		ReclaimPolicy: &reclaimPolicy,
+		Provisioner:   "banzaicloud.com/nfs",
 	})
 	if err != nil {
 		logrus.Errorf("Error happened during creating the StorageClass for Nfs %s", err.Error())

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: pvc-operator
-          image: banzaicloud/pvc-operator:v0.0.3
+          image: banzaicloud/pvc-operator:v0.0.4
           command:
           - pvc-operator
           imagePullPolicy: Always

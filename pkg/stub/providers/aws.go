@@ -10,9 +10,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// AwsProvider holds info about Aws provider and allows us to implement the common interface
 type AwsProvider struct {
 }
 
+// CreateStorageClass creates a StorageClass based on specs described on PVC
 func (aws *AwsProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) error {
 	logrus.Info("Creating new storage class")
 	provisioner, err := aws.determineProvisioner(pvc)
@@ -41,10 +43,12 @@ func (aws *AwsProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) error 
 	})
 }
 
+// GenerateMetadata generates metadata which are needed to create a StorageClass
 func (aws *AwsProvider) GenerateMetadata() error {
 	return nil
 }
 
+// determineParameters determines the access mode from PVC
 func (aws *AwsProvider) determineParameters(pvc *v1.PersistentVolumeClaim) (map[string]string, error) {
 	//var parameter = map[string]string{}
 	for _, mode := range pvc.Spec.AccessModes {
@@ -56,6 +60,7 @@ func (aws *AwsProvider) determineParameters(pvc *v1.PersistentVolumeClaim) (map[
 	return nil, errors.New("could not determine parameters")
 }
 
+// determineProvisioner determines what kind of provisioner should the storage class use
 func (aws *AwsProvider) determineProvisioner(pvc *v1.PersistentVolumeClaim) (string, error) {
 	for _, mode := range pvc.Spec.AccessModes {
 		switch mode {
@@ -70,10 +75,12 @@ func (aws *AwsProvider) determineProvisioner(pvc *v1.PersistentVolumeClaim) (str
 	return "", errors.New("AccessMode is missing from the PVC")
 }
 
+// CheckBucketExistence checks if the bucket already exists
 func (aws *AwsProvider) CheckBucketExistence(store *v1alpha1.ObjectStore) (bool, error) {
 	return false, nil
 }
 
+// CreateObjectStoreBucket creates a bucket in a cloud specific object store
 func (aws *AwsProvider) CreateObjectStoreBucket(store *v1alpha1.ObjectStore) error {
 	return nil
 }

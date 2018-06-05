@@ -17,12 +17,14 @@ import (
 	"net/http"
 )
 
+// Metadata holds info about Azure
 type Metadata struct {
 	location          string
 	subscriptionID    string
 	resourceGroupName string
 }
 
+// AzureProvider holds info about Azure provider and allows us to implement the common interface
 type AzureProvider struct {
 	metadata Metadata
 }
@@ -34,6 +36,7 @@ const (
 	kind           = "kind"
 )
 
+// CreateStorageClass creates a StorageClass based on specs described on PVC
 func (az *AzureProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) error {
 	logrus.Info("Creating new storage class")
 	provisioner, err := az.determineProvisioner(pvc)
@@ -65,6 +68,7 @@ func (az *AzureProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) error
 	})
 }
 
+// GenerateMetadata generates metadata which are needed to create a StorageClass
 func (az *AzureProvider) GenerateMetadata() error {
 	logrus.Infof("Getting Metadata from service")
 	var metadatas = [3]string{
@@ -99,6 +103,7 @@ func (az *AzureProvider) GenerateMetadata() error {
 	return nil
 }
 
+// createStorageAccount creates an Azure storage account
 func createStorageAccount(ctx context.Context, accountName string, az *AzureProvider) (s storage.Account, err error) {
 	storageAccountsClient, err := createStorageAccountClient(az.metadata.subscriptionID)
 
@@ -139,6 +144,7 @@ func createStorageAccount(ctx context.Context, accountName string, az *AzureProv
 	return future.Result(storageAccountsClient)
 }
 
+// createStorageAccountClient creates a client to communicate with Azure
 func createStorageAccountClient(subscriptionID string) (storage.AccountsClient, error) {
 	accountClient := storage.NewAccountsClient(subscriptionID)
 	logrus.Info("Authenticating...")
@@ -152,6 +158,7 @@ func createStorageAccountClient(subscriptionID string) (storage.AccountsClient, 
 	return accountClient, nil
 }
 
+// determineParameters determines the access mode from PVC
 func (az *AzureProvider) determineParameters(pvc *v1.PersistentVolumeClaim) (map[string]string, error) {
 	var parameter = map[string]string{}
 	for _, mode := range pvc.Spec.AccessModes {
@@ -171,6 +178,7 @@ func (az *AzureProvider) determineParameters(pvc *v1.PersistentVolumeClaim) (map
 	return nil, errors.New("could not determine parameters")
 }
 
+// determineProvisioner determines what kind of provisioner should the storage class use
 func (az *AzureProvider) determineProvisioner(pvc *v1.PersistentVolumeClaim) (string, error) {
 	for _, mode := range pvc.Spec.AccessModes {
 		switch mode {
@@ -185,10 +193,12 @@ func (az *AzureProvider) determineProvisioner(pvc *v1.PersistentVolumeClaim) (st
 	return "", errors.New("AccessMode is missing from the PVC")
 }
 
+// CheckBucketExistence checks if the bucket already exists
 func (az *AzureProvider) CheckBucketExistence(bucket *v1alpha1.ObjectStore) (bool, error) {
 	return false, nil
 }
 
+// CreateObjectStoreBucket creates a bucket in a cloud specific object store
 func (az *AzureProvider) CreateObjectStoreBucket(*v1alpha1.ObjectStore) error {
 	return nil
 }

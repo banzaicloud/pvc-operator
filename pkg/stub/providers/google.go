@@ -14,10 +14,12 @@ import (
 	"net/http"
 )
 
+// GoogleProvider holds info about Google provider and allows us to implement the common interface
 type GoogleProvider struct {
 	projectId string
 }
 
+// CreateStorageClass creates a StorageClass based on specs described on PVC
 func (gke *GoogleProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) error {
 	logrus.Info("Creating new storage class")
 	provisioner, err := gke.determineProvisioner(pvc)
@@ -46,10 +48,12 @@ func (gke *GoogleProvider) CreateStorageClass(pvc *v1.PersistentVolumeClaim) err
 	})
 }
 
+// GenerateMetadata generates metadata which are needed to create a StorageClass
 func (gke *GoogleProvider) GenerateMetadata() error {
 	return nil
 }
 
+// determineParameters determines the access mode from PVC
 func (gke *GoogleProvider) determineParameters(pvc *v1.PersistentVolumeClaim) (map[string]string, error) {
 	//var parameter = map[string]string{}
 	for _, mode := range pvc.Spec.AccessModes {
@@ -61,6 +65,7 @@ func (gke *GoogleProvider) determineParameters(pvc *v1.PersistentVolumeClaim) (m
 	return nil, errors.New("could not determine parameters")
 }
 
+// determineProvisioner determines what kind of provisioner should the storage class use
 func (gke *GoogleProvider) determineProvisioner(pvc *v1.PersistentVolumeClaim) (string, error) {
 	for _, mode := range pvc.Spec.AccessModes {
 		switch mode {
@@ -73,6 +78,7 @@ func (gke *GoogleProvider) determineProvisioner(pvc *v1.PersistentVolumeClaim) (
 	return "", errors.New("AccessMode is missing from the PVC")
 }
 
+// determineProjectId determines the project ID from the metadata server
 func (gke *GoogleProvider) determineProjectId() error {
 	logrus.Info("Getting ProjectID from Metadata service")
 	req, err := http.NewRequest("GET", "http://169.254.169.254/0.1/meta-data/project-id", nil)
@@ -94,6 +100,7 @@ func (gke *GoogleProvider) determineProjectId() error {
 	return nil
 }
 
+// CreateObjectStoreBucket creates a bucket in a cloud specific object store
 func (gke *GoogleProvider) CreateObjectStoreBucket(app *v1alpha1.ObjectStore) error {
 	ctx := context.Background()
 	logrus.Info("Creating new storage client")
@@ -114,6 +121,7 @@ func (gke *GoogleProvider) CreateObjectStoreBucket(app *v1alpha1.ObjectStore) er
 	return nil
 }
 
+// CheckBucketExistence checks if the bucket already exists
 func (gke *GoogleProvider) CheckBucketExistence(app *v1alpha1.ObjectStore) (bool, error) {
 	return false, nil
 }

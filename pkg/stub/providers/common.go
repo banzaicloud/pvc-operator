@@ -12,6 +12,7 @@ import (
 	"net/http"
 )
 
+// CommonProvider bonds together the required methods
 type CommonProvider interface {
 	CreateStorageClass(*v1.PersistentVolumeClaim) error
 	GenerateMetadata() error
@@ -21,6 +22,7 @@ type CommonProvider interface {
 	CheckBucketExistence(*v1alpha1.ObjectStore) (bool, error)
 }
 
+// DetermineProvider determines the cloud provider type based on metadata server
 func DetermineProvider() (CommonProvider, error) {
 	var providers = map[string]string{
 		"azure":  "http://169.254.169.254/metadata/instance?api-version=2017-12-01",
@@ -54,6 +56,7 @@ func DetermineProvider() (CommonProvider, error) {
 	return nil, fmt.Errorf("could not determine cloud provider")
 }
 
+// CheckPersistentVolumeClaimExistence checks if the PVC already exists
 func CheckPersistentVolumeClaimExistence(name string) bool {
 	persistentVolumeClaim := &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
@@ -73,6 +76,7 @@ func CheckPersistentVolumeClaimExistence(name string) bool {
 	return true
 }
 
+// CheckStorageClassExistence checks if the storage class already exists
 func CheckStorageClassExistence(name string) bool {
 	storageClass := &storagev1.StorageClass{
 		TypeMeta: metav1.TypeMeta{

@@ -14,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// SetUpNfsProvisioner sets up a deployment a pvc and a service to handle nfs workload
 func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 	logrus.Info("Creating new PersistentVolumeClaim for Nfs provisioner..")
 
@@ -176,6 +177,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 	return nil
 }
 
+// CheckNfsServerExistence checks if the NFS deployment and all companion service exists
 func CheckNfsServerExistence(name string) bool {
 	if !CheckPersistentVolumeClaimExistence(fmt.Sprintf("%s-data", name)) {
 		logrus.Info("PersistentVolume claim for Nfs does not exists!")
@@ -193,6 +195,7 @@ func CheckNfsServerExistence(name string) bool {
 
 }
 
+// checkNfsProviderDeployment checks if the NFS deployment exists
 func checkNfsProviderDeployment() bool {
 	deployment := &v1beta1.Deployment{
 		TypeMeta: metav1.TypeMeta{

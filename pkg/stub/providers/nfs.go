@@ -3,14 +3,13 @@ package providers
 import (
 	"fmt"
 
+	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"
+	"k8s.io/api/apps/v1beta1"
 	"k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
-
-	"github.com/operator-framework/operator-sdk/pkg/sdk"
-	"k8s.io/api/apps/v1beta1"
-	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -106,11 +105,13 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
-						{Name: "nfs-prov-volume", VolumeSource: v1.VolumeSource{
-							PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-								ClaimName: fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
+						{
+							Name: "nfs-prov-volume", VolumeSource: v1.VolumeSource{
+								PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+									ClaimName: fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
+								},
 							},
-						}},
+						},
 					},
 					Containers: []v1.Container{
 						{
@@ -140,6 +141,9 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 							},
 							VolumeMounts: []v1.VolumeMount{
 								{Name: "nfs-prov-volume", MountPath: "/export"},
+							},
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{v1.ResourceCPU: resource.MustParse("1")},
 							},
 						},
 					},

@@ -2,6 +2,7 @@ package providers
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"
@@ -13,9 +14,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const namespaceForNFS = "NFS_NAMESPACE"
+
 // SetUpNfsProvisioner sets up a deployment a pvc and a service to handle nfs workload
 func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 	logrus.Info("Creating new PersistentVolumeClaim for Nfs provisioner..")
+	nfsNamespace := os.Getenv(namespaceForNFS)
 
 	ownerRef := asOwner(getOwner())
 	plusStorage, _ := resource.ParseQuantity("2Gi")
@@ -29,7 +33,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
-			Namespace: "default",
+			Namespace: nfsNamespace,
 			OwnerReferences: []metav1.OwnerReference{
 				ownerRef,
 			},
@@ -60,7 +64,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 			Labels: map[string]string{
 				"app": "nfs-provisioner",
 			},
-			Namespace: "default",
+			Namespace: nfsNamespace,
 			OwnerReferences: []metav1.OwnerReference{
 				ownerRef,
 			},
@@ -90,7 +94,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "nfs-provisioner",
-			Namespace: "default",
+			Namespace: nfsNamespace,
 			OwnerReferences: []metav1.OwnerReference{
 				ownerRef,
 			},
@@ -182,8 +186,8 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 }
 
 // CheckNfsServerExistence checks if the NFS deployment and all companion service exists
-func CheckNfsServerExistence(name string) bool {
-	if !CheckPersistentVolumeClaimExistence(fmt.Sprintf("%s-data", name)) {
+func CheckNfsServerExistence(name, namespace string) bool {
+	if !CheckPersistentVolumeClaimExistence(fmt.Sprintf("%s-data", name), namespace) {
 		logrus.Info("PersistentVolume claim for Nfs does not exists!")
 		return false
 	}
@@ -201,6 +205,7 @@ func CheckNfsServerExistence(name string) bool {
 
 // checkNfsProviderDeployment checks if the NFS deployment exists
 func checkNfsProviderDeployment() bool {
+	nfsNamespace := os.Getenv(namespaceForNFS)
 	deployment := &v1beta1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -208,7 +213,7 @@ func checkNfsProviderDeployment() bool {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "nfs-provisioner",
-			Namespace: "default",
+			Namespace: nfsNamespace,
 		},
 		Spec: v1beta1.DeploymentSpec{
 			Template: v1.PodTemplateSpec{
@@ -231,7 +236,7 @@ func checkNfsProviderDeployment() bool {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "nfs-provisioner",
-			Namespace: "default",
+			Namespace: nfsNamespace,
 		},
 		Spec: v1.ServiceSpec{
 			Selector: map[string]string{"app": "nfs-provisioner"},

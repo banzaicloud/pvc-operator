@@ -10,6 +10,7 @@ import (
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
+	"os"
 )
 
 // CommonProvider bonds together the required methods
@@ -57,7 +58,7 @@ func DetermineProvider() (CommonProvider, error) {
 }
 
 // CheckPersistentVolumeClaimExistence checks if the PVC already exists
-func CheckPersistentVolumeClaimExistence(name string) bool {
+func CheckPersistentVolumeClaimExistence(name, namespace string) bool {
 	persistentVolumeClaim := &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PersistentVolumeClaim",
@@ -65,7 +66,7 @@ func CheckPersistentVolumeClaimExistence(name string) bool {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: "default",
+			Namespace: namespace,
 		},
 	}
 	if err := sdk.Get(persistentVolumeClaim); err != nil {
@@ -107,8 +108,10 @@ func asOwner(m *v1beta1.Deployment) metav1.OwnerReference {
 	}
 }
 
-//getOwner returns the CustomResourceDefinition created for the Operator
+//getOwner returns the Deployment created for the Operator
 func getOwner() *v1beta1.Deployment {
+	const operatorNamespace = "OPERATOR_NAMESPACE"
+
 	deployment := &v1beta1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -116,7 +119,7 @@ func getOwner() *v1beta1.Deployment {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "pvc-operator",
-			Namespace: "default",
+			Namespace: os.Getenv(operatorNamespace),
 		},
 	}
 	if err := sdk.Get(deployment); err != nil {

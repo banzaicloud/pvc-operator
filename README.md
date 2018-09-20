@@ -53,7 +53,7 @@ The given chart should include a `Persistent Volume Claim` which includes a [Sto
 
 #### 1. How does this project uses Kubernetes Namespaces?
 
-The operator supports multiple Kubernetes Namespaces. In case of NFS the Deployment will still be created in the `default` namespace. 
+The operator supports multiple Kubernetes Namespaces.
 
 #### 2. How is the cloud provider determined?
 

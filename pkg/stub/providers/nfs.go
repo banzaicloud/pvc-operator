@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+const nfsDepName = "nfs-provisioner"
 
 const namespaceForNFS = "NFS_NAMESPACE"
 
@@ -60,9 +61,9 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "nfs-provisioner",
+			Name: nfsDepName,
 			Labels: map[string]string{
-				"app": "nfs-provisioner",
+				"app": nfsDepName,
 			},
 			Namespace: nfsNamespace,
 			OwnerReferences: []metav1.OwnerReference{
@@ -77,7 +78,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 				{Name: "rpcbind-udp", Port: 111, Protocol: "UDP"},
 			},
 			Selector: map[string]string{
-				"app": "nfs-provisioner",
+				"app": nfsDepName,
 			},
 		},
 	})
@@ -93,7 +94,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 			APIVersion: "extensions/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "nfs-provisioner",
+			Name:      nfsDepName,
 			Namespace: nfsNamespace,
 			OwnerReferences: []metav1.OwnerReference{
 				ownerRef,
@@ -104,7 +105,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "nfs-provisioner",
+						"app": nfsDepName,
 					},
 				},
 				Spec: v1.PodSpec{
@@ -119,7 +120,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 					},
 					Containers: []v1.Container{
 						{
-							Name:  "nfs-provisioner",
+							Name:  nfsDepName,
 							Image: "quay.io/kubernetes_incubator/nfs-provisioner:v1.0.9",
 							Ports: []v1.ContainerPort{
 								{Name: "nfs", ContainerPort: 2049},
@@ -140,7 +141,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 							},
 							Env: []v1.EnvVar{
 								{Name: "POD_IP", ValueFrom: &v1.EnvVarSource{FieldRef: &v1.ObjectFieldSelector{FieldPath: "status.podIP"}}},
-								{Name: "SERVICE_NAME", Value: "nfs-provisioner"},
+								{Name: "SERVICE_NAME", Value: nfsDepName},
 								{Name: "POD_NAMESPACE", ValueFrom: &v1.EnvVarSource{FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
 							},
 							VolumeMounts: []v1.VolumeMount{
@@ -212,7 +213,7 @@ func checkNfsProviderDeployment() bool {
 			APIVersion: "extensions/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "nfs-provisioner",
+			Name:      nfsDepName,
 			Namespace: nfsNamespace,
 		},
 		Spec: v1beta1.DeploymentSpec{
@@ -235,11 +236,11 @@ func checkNfsProviderDeployment() bool {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "nfs-provisioner",
+			Name:      nfsDepName,
 			Namespace: nfsNamespace,
 		},
 		Spec: v1.ServiceSpec{
-			Selector: map[string]string{"app": "nfs-provisioner"},
+			Selector: map[string]string{"app": nfsDepName},
 		},
 	}
 	if err := sdk.Get(deployment); err != nil {

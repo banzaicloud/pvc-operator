@@ -265,6 +265,7 @@
 [[projects]]
   name = "go.opencensus.io"
   packages = [
+    ".",
     "exporter/stackdriver/propagation",
     "internal",
     "internal/tagencoding",
@@ -276,10 +277,11 @@
     "tag",
     "trace",
     "trace/internal",
-    "trace/propagation"
+    "trace/propagation",
+    "trace/tracestate"
   ]
-  revision = "10cec2c05ea2cfb8b0d856711daedc49d8a45c56"
-  version = "v0.9.0"
+  revision = "79993219becaa7e29e3b60cb67f5b8e82dee11d6"
+  version = "v0.17.0"
 
 [[projects]]
   branch = "master"

@@ -21,13 +21,17 @@ const namespaceForNFS = "NFS_NAMESPACE"
 func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 	logrus.Info("Creating new PersistentVolumeClaim for Nfs provisioner..")
 	nfsNamespace := os.Getenv(namespaceForNFS)
-
-	ownerRef := asOwner(getOwner())
 	plusStorage, _ := resource.ParseQuantity("2Gi")
 	parsedStorageSize := pv.Spec.Resources.Requests["storage"]
 	parsedStorageSize.Add(plusStorage)
 
-	err := sdk.Create(&v1.PersistentVolumeClaim{
+	ownerRef := make([]metav1.OwnerReference, 0)
+
+	if os.Getenv("OWNER_REFERENCE_NAME") != "" {
+		ownerRef = []metav1.OwnerReference{asOwner(getOwner())}
+	}
+
+	nfsPvc := &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PersistentVolumeClaim",
 			APIVersion: "v1",
@@ -35,9 +39,6 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
 			Namespace: nfsNamespace,
-			OwnerReferences: []metav1.OwnerReference{
-				ownerRef,
-			},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
@@ -49,13 +50,19 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 				},
 			},
 		},
-	})
+	}
+
+	if len(ownerRef) != 0 {
+		nfsPvc.SetOwnerReferences(ownerRef)
+	}
+
+	err := sdk.Create(nfsPvc)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		logrus.Errorf("Error happened during creating a PersistentVolumeClaim for Nfs %s", err.Error())
 		return err
 	}
 	logrus.Info("Creating new Service for Nfs provisioner..")
-	err = sdk.Create(&v1.Service{
+	nfsSvc := &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
@@ -66,9 +73,6 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 				"app": nfsDepName,
 			},
 			Namespace: nfsNamespace,
-			OwnerReferences: []metav1.OwnerReference{
-				ownerRef,
-			},
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -81,14 +85,19 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 				"app": nfsDepName,
 			},
 		},
-	})
+	}
+	if len(ownerRef) != 0 {
+		nfsSvc.SetOwnerReferences(ownerRef)
+	}
+
+	err = sdk.Create(nfsSvc)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		logrus.Errorf("Error happened during creating the Service for Nfs %s", err.Error())
 		return err
 	}
 	logrus.Info("Creating new Deployment for Nfs provisioner..")
 	replicas := int32(1)
-	err = sdk.Create(&v1beta1.Deployment{
+	nfsDepl := &v1beta1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
 			APIVersion: "extensions/v1beta1",
@@ -96,9 +105,6 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      nfsDepName,
 			Namespace: nfsNamespace,
-			OwnerReferences: []metav1.OwnerReference{
-				ownerRef,
-			},
 		},
 		Spec: v1beta1.DeploymentSpec{
 			Replicas: &replicas,
@@ -112,10 +118,10 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 					Volumes: []v1.Volume{
 						{
 							Name: "nfs-prov-volume", VolumeSource: v1.VolumeSource{
-								PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-									ClaimName: fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
-								},
+							PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+								ClaimName: fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
 							},
+						},
 						},
 					},
 					Containers: []v1.Container{
@@ -158,27 +164,32 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 				Type: v1beta1.RecreateDeploymentStrategyType,
 			},
 		},
-	})
+	}
+	if len(ownerRef) != 0 {
+		nfsDepl.SetOwnerReferences(ownerRef)
+	}
+	err = sdk.Create(nfsDepl)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		logrus.Errorf("Error happened during creating the Deployment for Nfs %s", err.Error())
 		return err
 	}
 	logrus.Info("Creating new StorageClass for Nfs provisioner..")
 	reclaimPolicy := v1.PersistentVolumeReclaimRetain
-	err = sdk.Create(&storagev1.StorageClass{
+	nfsStorageClass := &storagev1.StorageClass{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StorageClass",
 			APIVersion: "storage.k8s.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: *pv.Spec.StorageClassName,
-			OwnerReferences: []metav1.OwnerReference{
-				ownerRef,
-			},
 		},
 		ReclaimPolicy: &reclaimPolicy,
 		Provisioner:   "banzaicloud.com/nfs",
-	})
+	}
+	if len(ownerRef) != 0 {
+		nfsStorageClass.SetOwnerReferences(ownerRef)
+	}
+	err = sdk.Create(nfsStorageClass)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		logrus.Errorf("Error happened during creating the StorageClass for Nfs %s", err.Error())
 		return err

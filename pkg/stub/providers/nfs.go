@@ -2,8 +2,6 @@ package providers
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/apps/v1beta1"
@@ -12,19 +10,23 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"os"
+	"strconv"
 )
 
 const (
-    nfsDepName = "nfs-provisioner"
-    namespaceForNFS = "NFS_NAMESPACE"
-    ownerRefName = "OWNER_REFERENCE_NAME"
+	nfsDepName           = "nfs-provisioner"
+	namespaceForNFS      = "NFS_NAMESPACE"
+	ownerRefName         = "OWNER_REFERENCE_NAME"
+	isRbacEnabled        = "RBAC_ENABLED"
+	nfsServiceAccountEnv = "NFS_SERVICE_ACCOUNT_NAME"
 )
 
 // SetUpNfsProvisioner sets up a deployment a pvc and a service to handle nfs workload
 func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 	logrus.Info("Creating new PersistentVolumeClaim for Nfs provisioner..")
 
-    const volumeName  = "nfs-prov-volume"
+	const volumeName = "nfs-prov-volume"
 
 	nfsNamespace := os.Getenv(namespaceForNFS)
 	plusStorage, _ := resource.ParseQuantity("2Gi")
@@ -39,40 +41,40 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 	}
 
 	if pv.Annotations["localvolume"] == "true" {
-        isLocalVolume = true
-    }
-    if !isLocalVolume {
-        nfsPvc := &v1.PersistentVolumeClaim{
-            TypeMeta: metav1.TypeMeta{
-                Kind:       "PersistentVolumeClaim",
-                APIVersion: "v1",
-            },
-            ObjectMeta: metav1.ObjectMeta{
-                Name:      fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
-                Namespace: nfsNamespace,
-            },
-            Spec: v1.PersistentVolumeClaimSpec{
-                AccessModes: []v1.PersistentVolumeAccessMode{
-                    v1.ReadWriteOnce,
-                },
-                Resources: v1.ResourceRequirements{
-                    Requests: v1.ResourceList{
-                        "storage": parsedStorageSize,
-                    },
-                },
-            },
-        }
+		isLocalVolume = true
+	}
+	if !isLocalVolume {
+		nfsPvc := &v1.PersistentVolumeClaim{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "PersistentVolumeClaim",
+				APIVersion: "v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
+				Namespace: nfsNamespace,
+			},
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes: []v1.PersistentVolumeAccessMode{
+					v1.ReadWriteOnce,
+				},
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						"storage": parsedStorageSize,
+					},
+				},
+			},
+		}
 
-        if len(ownerRef) != 0 {
-            nfsPvc.SetOwnerReferences(ownerRef)
-        }
+		if len(ownerRef) != 0 {
+			nfsPvc.SetOwnerReferences(ownerRef)
+		}
 
-        err := sdk.Create(nfsPvc)
-        if err != nil && !errors.IsAlreadyExists(err) {
-            logrus.Errorf("Error happened during creating a PersistentVolumeClaim for Nfs %s", err.Error())
-            return err
-        }
-    }
+		err := sdk.Create(nfsPvc)
+		if err != nil && !errors.IsAlreadyExists(err) {
+			logrus.Errorf("Error happened during creating a PersistentVolumeClaim for Nfs %s", err.Error())
+			return err
+		}
+	}
 	logrus.Info("Creating new Service for Nfs provisioner..")
 	nfsSvc := &v1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -169,25 +171,35 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 		},
 	}
 	if isLocalVolume {
-        nfsDepl.Spec.Template.Spec.Volumes =  []v1.Volume{{
-            Name: volumeName,
-            VolumeSource: v1.VolumeSource{
-                HostPath: &v1.HostPathVolumeSource{
-                    Path: "/tmp",
-                },
-            },
-        }}
-    } else {
-        nfsDepl.Spec.Template.Spec.Volumes = []v1.Volume{{
-                Name: volumeName,
-                VolumeSource: v1.VolumeSource{
-                PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-                    ClaimName: fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
-                },},},}
-    }
+		nfsDepl.Spec.Template.Spec.Volumes = []v1.Volume{{
+			Name: volumeName,
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "/tmp",
+				},
+			},
+		}}
+	} else {
+		nfsDepl.Spec.Template.Spec.Volumes = []v1.Volume{{
+			Name: volumeName,
+			VolumeSource: v1.VolumeSource{
+				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+					ClaimName: fmt.Sprintf("%s-data", *pv.Spec.StorageClassName),
+				}}}}
+	}
 	if len(ownerRef) != 0 {
 		nfsDepl.SetOwnerReferences(ownerRef)
 	}
+	rbacEnabled, err := strconv.ParseBool(os.Getenv(isRbacEnabled))
+	if err != nil {
+		return err
+	}
+	if rbacEnabled {
+		if serviceAcc := os.Getenv(nfsServiceAccountEnv); serviceAcc != "" {
+			nfsDepl.Spec.Template.Spec.ServiceAccountName = serviceAcc
+		}
+	}
+
 	err = sdk.Create(nfsDepl)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		logrus.Errorf("Error happened during creating the Deployment for Nfs %s", err.Error())

@@ -159,7 +159,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 								{Name: volumeName, MountPath: "/export"},
 							},
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{v1.ResourceCPU: resource.MustParse("1")},
+								Requests: v1.ResourceList{v1.ResourceCPU: resource.MustParse("250m")},
 							},
 						},
 					},

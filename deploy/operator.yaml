@@ -29,5 +29,7 @@ spec:
                   fieldPath: metadata.namespace
             - name: NFS_NAMESPACE
               value: "default"
+            - name: NFS_CPU_REQUEST
+              value: "250m"
             - name: OWNER_REFERENCE_NAME
               value: "pvc-operator"

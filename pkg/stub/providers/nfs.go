@@ -20,6 +20,7 @@ const (
 	ownerRefName         = "OWNER_REFERENCE_NAME"
 	isRbacEnabled        = "RBAC_ENABLED"
 	nfsServiceAccountEnv = "NFS_SERVICE_ACCOUNT_NAME"
+	cpuRequestForNFS     = "NFS_CPU_REQUEST"
 )
 
 // SetUpNfsProvisioner sets up a deployment a pvc and a service to handle nfs workload
@@ -29,6 +30,17 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 	const volumeName = "nfs-prov-volume"
 
 	nfsNamespace := os.Getenv(namespaceForNFS)
+
+	nfsProvisionerCPURequest := resource.MustParse("250m")
+	if value := os.Getenv(cpuRequestForNFS); value != "" {
+		parsed, err := resource.ParseQuantity(value)
+		if err != nil {
+			logrus.Errorf("failed to parse quantity in env var %s=%q: %v", cpuRequestForNFS, value, err)
+		} else {
+			nfsProvisionerCPURequest = parsed
+		}
+	}
+
 	plusStorage, _ := resource.ParseQuantity("2Gi")
 	parsedStorageSize := pv.Spec.Resources.Requests["storage"]
 	parsedStorageSize.Add(plusStorage)
@@ -159,7 +171,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 								{Name: volumeName, MountPath: "/export"},
 							},
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{v1.ResourceCPU: resource.MustParse("250m")},
+								Requests: v1.ResourceList{v1.ResourceCPU: nfsProvisionerCPURequest},
 							},
 						},
 					},

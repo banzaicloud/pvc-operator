@@ -25,11 +25,14 @@ const (
 
 // SetUpNfsProvisioner sets up a deployment a pvc and a service to handle nfs workload
 func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
-	logrus.Info("Creating new PersistentVolumeClaim for Nfs provisioner..")
+	logrus.Info("Creating new PersistentVolumeClaim for Nfs provisioner...")
 
 	const volumeName = "nfs-prov-volume"
 
 	nfsNamespace := os.Getenv(namespaceForNFS)
+	if nfsNamespace == "" {
+		nfsNamespace = "default"
+	}
 
 	nfsProvisionerCPURequest := resource.MustParse("250m")
 	if value := os.Getenv(cpuRequestForNFS); value != "" {
@@ -41,7 +44,7 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 		}
 	}
 
-	plusStorage, _ := resource.ParseQuantity("2Gi")
+	plusStorage := resource.MustParse("2Gi")
 	parsedStorageSize := pv.Spec.Resources.Requests["storage"]
 	parsedStorageSize.Add(plusStorage)
 	isLocalVolume := false
@@ -244,11 +247,11 @@ func SetUpNfsProvisioner(pv *v1.PersistentVolumeClaim) error {
 // CheckNfsServerExistence checks if the NFS deployment and all companion service exists
 func CheckNfsServerExistence(name, namespace string) bool {
 	if !CheckPersistentVolumeClaimExistence(fmt.Sprintf("%s-data", name), namespace) {
-		logrus.Info("PersistentVolume claim for Nfs does not exists!")
+		logrus.Info("PersistentVolume claim for Nfs does not exist!")
 		return false
 	}
 	if !checkNfsProviderDeployment() {
-		logrus.Info("Nfs provider deployment does not exists!")
+		logrus.Info("Nfs provider deployment does not exist!")
 		return false
 	}
 	if !CheckStorageClassExistence(name) {
@@ -299,11 +302,11 @@ func checkNfsProviderDeployment() bool {
 		},
 	}
 	if err := sdk.Get(deployment); err != nil {
-		logrus.Infof("Nfs provider deployment does not exists %s", err.Error())
+		logrus.Infof("Nfs provider deployment does not exist: %v", err)
 		return false
 	}
 	if err := sdk.Get(service); err != nil {
-		logrus.Infof("Nfs provider service does not exists %s", err.Error())
+		logrus.Infof("Nfs provider service does not exist: %v", err)
 		return false
 	}
 	logrus.Info("Nfs provider exists!")

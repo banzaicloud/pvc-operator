@@ -70,7 +70,7 @@ The NFS StorageClass solution is based on the [Kubernetes external-storages](htt
 
 #### 5. Why this project exists?
 
-Here at [Banzai Cloud](https://banzaicloud.com) we try to automate everything so you don't have to. If you need to provision a Kubernetes cluster please check out [Pipeline](github.com/banzaicloud/pipeline). If you already have one, but you are struggling to find and configure the right `Persistent Storage` for your need then this project is for you. 
+Here at [Banzai Cloud](https://banzaicloud.com) we try to automate everything so you don't have to. If you need to provision a Kubernetes cluster please check out [Pipeline](https://github.com/banzaicloud/pipeline). If you already have one, but you are struggling to find and configure the right `Persistent Storage` for your need then this project is for you. 
 
 #### 6. What's next for this project for the near future?
 

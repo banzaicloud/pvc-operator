@@ -170,7 +170,7 @@ func (az *AzureProvider) determineParameters(pvc *v1.PersistentVolumeClaim) (map
 		case "ReadWriteMany", "ReadOnlyMany":
 			loc := az.metadata.location
 			parameter[location] = loc
-			parameter[storageAccount] = "banzaicloudtest"
+			parameter[storageAccount] = "banzaicloudpvcop"
 			parameter[skuName] = "Standard_LRS"
 			return parameter, nil
 		}

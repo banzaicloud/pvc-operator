@@ -14,6 +14,7 @@ import (
 	"k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"math/rand"
 	"net/http"
 )
 
@@ -120,6 +121,7 @@ func createStorageAccount(ctx context.Context, accountName string, az *AzureProv
 		logrus.Fatalf("%s [%s]: %v: %v", "storage account name not available", accountName, err, *result.Message)
 	}
 
+
 	future, err := storageAccountsClient.Create(
 		ctx,
 		az.metadata.resourceGroupName,
@@ -130,6 +132,7 @@ func createStorageAccount(ctx context.Context, accountName string, az *AzureProv
 			Kind:     storage.Storage,
 			Location: to.StringPtr(az.metadata.location),
 			AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
+			Tags: map[string]*string{"created-by": to.StringPtr("pvc-operator")},
 		})
 
 	if err != nil {
@@ -170,7 +173,7 @@ func (az *AzureProvider) determineParameters(pvc *v1.PersistentVolumeClaim) (map
 		case "ReadWriteMany", "ReadOnlyMany":
 			loc := az.metadata.location
 			parameter[location] = loc
-			parameter[storageAccount] = "banzaicloudtest"
+			parameter[storageAccount] = generateStorageAccountName()
 			parameter[skuName] = "Standard_LRS"
 			return parameter, nil
 		}
@@ -201,4 +204,16 @@ func (az *AzureProvider) CheckBucketExistence(bucket *v1alpha1.ObjectStore) (boo
 // CreateObjectStoreBucket creates a bucket in a cloud specific object store
 func (az *AzureProvider) CreateObjectStoreBucket(*v1alpha1.ObjectStore) error {
 	return nil
+}
+
+// generateStorageAccountName generates a random name of 24 chars length that consists of lower case letters and numbers
+func generateStorageAccountName() string {
+	letters := "abcdefghijklmnopqrstuvwxyz0123456789"
+	b := make([]byte, 24)
+
+	for i := range b {
+		b[i] = letters[rand.Int63() % int64(len(letters))]
+	}
+
+	return string(b)
 }
